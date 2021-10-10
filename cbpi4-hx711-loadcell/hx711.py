@@ -108,34 +108,43 @@ class HX711:
         
 
     def readRawBytes(self):
+        max_retries = 500
+        retries = max_retries
         # Wait for and get the Read Lock, incase another thread is already
         # driving the HX711 serial interface.
         self.readLock.acquire()
         # Wait until HX711 is ready for us to read a sample.
-        while not self.is_ready():
+        while not self.is_ready() and retries:
+            time.sleep(0.001)
+            retries -=1
             pass
-
-        # Read three bytes of data from the HX711.
-        firstByte  = self.readNextByte()
-        secondByte = self.readNextByte()
-        thirdByte  = self.readNextByte()
-
-        # HX711 Channel and gain factor are set by number of bits read
-        # after 24 data bits.
-        for i in range(self.GAIN):
-           # Clock a bit out of the HX711 and throw it away.
-           self.readNextBit()
-
-        # Release the Read Lock, now that we've finished driving the HX711
-        # serial interface.
-        self.readLock.release()           
-
-        # Depending on how we're configured, return an orderd list of raw byte
-        # values.
-        if self.byte_format == 'LSB':
-           return [thirdByte, secondByte, firstByte]
+        if not retries:
+            logging.error("Timed out waiting for HX711.")
+            self.readLock.release()  
+            pass
         else:
-           return [firstByte, secondByte, thirdByte]
+#            logging.info("Retires: {}".format(max_retries-retries))
+            # Read three bytes of data from the HX711.
+            firstByte  = self.readNextByte()
+            secondByte = self.readNextByte()
+            thirdByte  = self.readNextByte()
+
+            # HX711 Channel and gain factor are set by number of bits read
+            # after 24 data bits.
+            for i in range(self.GAIN):
+               # Clock a bit out of the HX711 and throw it away.
+               self.readNextBit()
+
+            # Release the Read Lock, now that we've finished driving the HX711
+            # serial interface.
+            self.readLock.release()           
+
+            # Depending on how we're configured, return an orderd list of raw byte
+            # values.
+            if self.byte_format == 'LSB':
+                return [thirdByte, secondByte, firstByte]
+            else:
+               return [firstByte, secondByte, thirdByte]
 
 
     def read_long(self):

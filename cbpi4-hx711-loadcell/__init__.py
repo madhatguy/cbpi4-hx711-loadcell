@@ -50,9 +50,9 @@ class CustomSensor(CBPiSensor):
     async def run(self):
 
         logging.info("Setup HX711")
-        self.hx = HX711(self.dout, self.pd_sck)
-        logging.info("Set Gain")
-        self.hx.set_gain(self.gain)
+        self.hx = HX711(self.dout, self.pd_sck, self.gain)
+#        logging.info("Set Gain")
+#        self.hx.set_gain(self.gain)
         logging.info("Set Reading Format")
         self.hx.set_reading_format("MSB", "MSB")
         logging.info("Set Offset")
