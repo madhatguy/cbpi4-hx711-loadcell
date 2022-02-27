@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 import asyncio
 import random
 from cbpi.api import *
-# from .hx711 import HX711
-# from cbpi.api.dataclasses import NotificationAction, NotificationType
+from .hx711 import HX711
+from cbpi.api.dataclasses import NotificationAction, NotificationType
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class WeightSensor(CBPiSensor):
         self.next = False
         self.weight = float(weight)
         if self.weight <= 0:
-            # self.cbpi.notify("Loadcell Calibration Error", "Weight for calibration must be larger than 0", NotificationType.ERROR, action=[NotificationAction("Next", self.NextStep)])
+            self.cbpi.notify("Loadcell Calibration Error", "Weight for calibration must be larger than 0", NotificationType.ERROR, action=[NotificationAction("Next", self.NextStep)])
             return
         logging.info(weight)
         self.calibration_active = True
@@ -68,7 +68,7 @@ class WeightSensor(CBPiSensor):
         logging.info("Calibrate HX711 Loadcell")
         self.cal_offset = self.hx.read_average()
         logging.info("Offset {}".format(self.cal_offset))
-        # self.cbpi.notify("Loadcell Calibration", "Please put your known weight on the scale and press next", NotificationType.INFO, action=[NotificationAction("Next Step", self.NextStep)])
+        self.cbpi.notify("Loadcell Calibration", "Please put your known weight on the scale and press next", NotificationType.INFO, action=[NotificationAction("Next Step", self.NextStep)])
         while not self.next == True:
             await asyncio.sleep(1)
             pass
@@ -77,7 +77,7 @@ class WeightSensor(CBPiSensor):
         self.reading = self.hx.read_average()
         self.calibration_factor = round(((self.reading-self.cal_offset) / self.weight),1)
         logging.info("Scale Factor {}".format(self.calibration_factor))
-        # self.cbpi.notify("Loadcell Calibration done", "Enter these values in the sensor hardware. Offset: {}; Scale: {}".format(self.cal_offset, self.calibration_factor),action=[NotificationAction("Next Step", self.NextStep)])
+        self.cbpi.notify("Loadcell Calibration done", "Enter these values in the sensor hardware. Offset: {}; Scale: {}".format(self.cal_offset, self.calibration_factor),action=[NotificationAction("Next Step", self.NextStep)])
         while not self.next == True:
             await asyncio.sleep(1)
             pass
@@ -101,7 +101,7 @@ class WeightSensor(CBPiSensor):
     async def run(self):
 
         logging.info("Setup HX711")
-        # self.hx = HX711(self.dout, self.pd_sck, self.gain)
+        self.hx = HX711(self.dout, self.pd_sck, self.gain)
         logging.info("Set Reading Format")
         self.hx.set_reading_format("MSB", "MSB")
         logging.info("Set Offset")
@@ -138,5 +138,4 @@ class WeightSensor(CBPiSensor):
 
 
 def setup(cbpi):
-    cbpi.plugin.register("HX711 Load Cell", WeightSensor)
-    pass
+    cbpi.plugin.register("Weight Sensor", WeightSensor)
