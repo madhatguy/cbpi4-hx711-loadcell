@@ -3,7 +3,7 @@
 import os
 from aiohttp import web
 import logging
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 from unittest.mock import MagicMock, patch
 import asyncio
 import random
@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
     Property.Number(label="scale",configurable = True, default_value = 0, description="Scale ratio input for the HX711 scale from callibration setup (Default is 1)"),
     Property.Select(label="Interval", options=[1,2,5,10,30,60], description="Interval in Seconds")])
 
-class CustomSensor(CBPiSensor):
+class WeightSensor(CBPiSensor):
     
     def __init__(self, cbpi, id, props):
-        super(CustomSensor, self).__init__(cbpi, id, props)
+        super(WeightSensor, self).__init__(cbpi, id, props)
         self.value = 0
         self.dout = int(self.props.get("dout",27))
         self.pd_sck = int(self.props.get("pd_sck",23))
@@ -138,5 +138,5 @@ class CustomSensor(CBPiSensor):
 
 
 def setup(cbpi):
-    cbpi.plugin.register("HX711 Load Cell", CustomSensor)
+    cbpi.plugin.register("HX711 Load Cell", WeightSensor)
     pass
